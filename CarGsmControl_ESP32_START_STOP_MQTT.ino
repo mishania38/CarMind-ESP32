@@ -17,7 +17,7 @@ OneWire         ds18b20(15);
 #define CAR_OP_PIN      19           // сигнал на отпирание
 #define CAR_CL_PIN      18           // сигнал на запирание
 #define BTN_LED_PIN     5            // Сигнал на подсветку кнопки Старт-Стоп
-#define HEAT_ENG_PIN    4            // сигнал на обогрев двигателя
+#define HEAT_ENG_PIN    4            // сигнал на подогрев двигателя
 
 
 /*------------------------------Порты ввода аналогового сигнала------------------*/
@@ -26,14 +26,14 @@ OneWire         ds18b20(15);
 #define BAT_V          A7            // Напряжение аккумулятора
 
 /*------------------------------Переменные хранения статуса-----------------------------*/
-bool alarmOn = false;                      // Статус охраны
-bool engineHeatOn = false;                 // Статус подогрева двигателя
-bool remoteEngineStartOn = false;          // Статус автозапуска
-bool hasEngineStarted = false;             // Статус заведенного двигателя
-volatile bool hasStartButtonClicked = false;        // Статус нажатой кнопки старт-стоп
-bool doCheckStatus = false;                // Флаг на отправку параметрии на сервер
-bool fullDetection = false;                // Флаг на проверку полной параметрии
-bool blinkBtnstate = 0;                    // Статус включенной подсветки кнопки старт-стоп
+bool alarmOn = false;                           // Статус замков дверей. Закрыт ли автомобиль
+bool engineHeatOn = false;                      // Статус включенного подогревателя двигателя
+bool remoteEngineStartOn = false;               // Статус удаленного запуска двигателя
+bool hasEngineStarted = false;                  // Статус заведенного двигателя
+volatile bool hasStartButtonClicked = false;    // Статус нажатий кнопки старт-стоп, меняется обработчиком прерываний
+bool doCheckStatus = false;                     // Флаг на отправку параметрии на сервер
+bool fullDetection = false;                     // Флаг на проверку полной параметрии
+bool blinkBtnstate = 0;                         // Статус включенной подсветки кнопки старт-стоп
 
 /*------------------------------Переменные с таймерами----------------------------------*/
 unsigned long whenRemoteEngineStartOn = 0;      // Время, когда был запущен двигатель
@@ -55,9 +55,13 @@ int totalcountNetError = 0;                 // Количество рестар
 void AllPinOff();
 void StartEngine(int timeIgn = 1000);
 void StopEngine();
+void CarOpen();
+void CarClose();
 float refreshTemperature();
 float refreshVoltage();
 void EngineHeat(bool on);
+
+
 void StartStopThread();
 
 
@@ -161,7 +165,7 @@ float refreshTemperature() {
 
 void StartStopThread()                      // Задача-поток отслеживания нажатий кнопки старт-стоп, таймер прогрева двигателя,
 {           
-  hasEngineStarted = (analogRead(TACH_PIN) >= RPM)      ? true : false;
+  hasEngineStarted = (analogRead(TACH_PIN) >= RPM)      ? true : false;  // Проверяем, запущен ли двигатель
 
   if (hasStartButtonClicked) {
     if (!hasEngineStarted){           // Проверяем нажата ли кнопка старт-стоп И двигатель не запущен                     
@@ -234,6 +238,32 @@ void Task2code(void *parameter)
 }
 */
 
+void CarOpen()                                   // Открываем автомобиль
+{
+  if (alarmOn) {
+    if (remoteEngineStartOn) {                   // Если до открытия автомобиля, двигатель был запущен на прогрев,
+      remoteEngineStartOn = false;               // то оставляем его работающим. Деактивировав таймер.
+    }
+    digitalWrite(CAR_OP_PIN, HIGH);
+    delay( 500 );
+    digitalWrite(CAR_OP_PIN, LOW);
+    alarmOn = false;
+  }
+}
+
+void CarClose()                                  // Закрываем автомобиль
+{
+  if (alarmOn == false) {
+    if (analogRead(TACH_PIN) >= RPM) {           // Если двигатель работал
+      remoteEngineStartOn = true;                // Активируем таймеры автозапуска
+    }
+    digitalWrite(CAR_CL_PIN, HIGH);
+    delay( 500 );
+    digitalWrite(CAR_CL_PIN, LOW);
+    digitalWrite(BTN_LED_PIN, LOW);
+    alarmOn = true;
+  }
+}
 
 void EngineHeat(bool on)                         // Включаем/выключаем подогрев двигателя
 {
@@ -252,5 +282,8 @@ void AllPinOff()
   digitalWrite(IGN_PIN, LOW);
   digitalWrite(STARTER_PIN, LOW);
   digitalWrite(ACC_PIN, LOW);
+  digitalWrite(CAR_OP_PIN, LOW);
+  digitalWrite(CAR_CL_PIN, LOW);
   digitalWrite(BTN_LED_PIN, LOW);
+  digitalWrite(HEAT_ENG_PIN, LOW); 
 }
