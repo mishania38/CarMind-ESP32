@@ -7,11 +7,13 @@
 #include <PubSubClient.h>
 #include <OneWire.h>
 #include <HTTPClient.h>
+#include <esp_task_wdt.h>
 
 #define SerialMon Serial
-#define MSG_BUFFER_SIZE	(50)
-//BluetoothSerial SerialBT;
+//#define MSG_BUFFER_SIZE	(50)
 
+
+const int WDT_TIMEOUT = 60;
 const char* ssid1 = "phone";
 const char* password1 = "191501541";
 const char* ssid2 = "HONOR X9b 5G";
@@ -143,6 +145,7 @@ void CheckStatus()                  // Сбор данных о состояни
   mqtt.publish(startTimer, (String(engineStartCountdown)).c_str());
 
   isStatusCheckRequired = false;
+  esp_task_wdt_reset();  // Сброс watchdog
 }
 
 void StartEngine(bool onTimer)      // Запускаем двигатель
@@ -159,6 +162,7 @@ void StartEngine(bool onTimer)      // Запускаем двигатель
 
     if (temp <= 0) {
       delay( 10000 );
+      esp_task_wdt_reset();  // Сброс watchdog
     }
     else if (temp > 0 || temp < 15) {
       delay( 1000 );
@@ -175,6 +179,8 @@ void StartEngine(bool onTimer)      // Запускаем двигатель
       delay(100);
       t += 100;
     }
+    esp_task_wdt_reset();  // Сброс watchdog
+
     digitalWrite(STARTER_PIN, LOW);                 // Выключаем стартер
     
     delay( 500 );
@@ -305,6 +311,7 @@ void StartStopThread()              // Обработчик нажатий кн�
     else {     // Если двигатель был запущен и нажали кнопку старт-стоп
       StopEngine();                                           // то глушим двигатель
       delay(500);
+      esp_task_wdt_reset();  // Сброс watchdog
     }
     isStartButtonPressed = false;  // Сброс флага после обработки
   }
@@ -332,6 +339,14 @@ void setup() {
 
   attachInterrupt(START_BTN, myIsr, RISING);
 
+  const esp_task_wdt_config_t twdt_config = {
+    .timeout_ms = 60000, // 60-second timeout
+    .idle_core_mask = (1 << configNUM_CORES) - 1, // Subscribe all idle tasks
+    .trigger_panic = true // Panic and reset on timeout
+  };
+  
+  
+
   mqtt.setServer(broker, PORT);                  //Настройки брокера MQTT
   mqtt.setCallback(MqttCallback);
 
@@ -339,24 +354,28 @@ void setup() {
   SerialMon.begin(115200);
 
   AllPinOff();
-  /*
+  
   xTaskCreatePinnedToCore(Task1code, "Task1", 20000, NULL, 1, &Task1, 0);
   delay(500);
   xTaskCreatePinnedToCore(Task2code, "Task2", 20000, NULL, 1, &Task2, 1);
   delay(500);
-  */
+
+  esp_task_wdt_init(&twdt_config);  // Инициализируем WDT на 10 секунд
+  
 }
 
 void loop() {
-  MqttThread();
-  delay(1000);
+  esp_task_wdt_reset();  // Сброс watchdog
 }
 
 void Task1code(void *parameter)
 {
   for (;;)
   {
-    
+    esp_task_wdt_add(NULL);        // Добавляем текущую задачу в наблюдатель WDT
+    MqttThread();
+    delay(1000);
+    esp_task_wdt_reset();  // Сброс watchdog
   }
 }
 
@@ -364,10 +383,11 @@ void Task2code(void *parameter)
 {
   for (;;)
   {
-    //StartStopThread();
-    //delay(500);
-    //ShedulerAction();
-    //delay(500);
+    StartStopThread();
+    delay(500);
+    ShedulerAction();
+    delay(500);
+    esp_task_wdt_reset();  // Сброс watchdog
   }
 }
 
@@ -390,6 +410,7 @@ void ConnectWIFI()
     Serial.println("IP address: ");
     Serial.println(WiFi.localIP());
   }
+  esp_task_wdt_reset();  // Сброс watchdog
 }
 
 void CheckWIFI()
@@ -421,6 +442,7 @@ void MqttThread()
       if (MqttConnect()) {
         countNetError = 0;
         lastMqttUpdate = 0;
+        esp_task_wdt_reset();  // Сброс watchdog
       }
     }
     delay(100);
