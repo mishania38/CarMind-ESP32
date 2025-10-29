@@ -2,29 +2,29 @@
 
 // 🛜 Wi-Fi настройки
 const char* WIFI_SSIDS[] = {
-  "phone",
-  "HONOR X9b 5G",
-  "NEONET-935B"
+  "ssid1",
+  "ssid2",
+  "ssid3"
 };
 
 const char* WIFI_PASSWORDS[] = {
-  "191501541",
-  "191501541",
-  "83c310c2"
+  "pass1",
+  "pass2",
+  "pass3"
 };
 
 // 🌐 MQTT настройки
-const char* MQTT_BROKER     = "57cda94e4ac14f5ea9404f6eb28e83fb.s1.eu.hivemq.cloud";
+const char* MQTT_BROKER     = "***********.s1.eu.hivemq.cloud";
 const int   MQTT_PORT       = 8883;
 
-const char* MQTT_USER       = "user_car";
-const char* MQTT_PASS       = "015C356c";
-const char* MQTT_CLIENT_ID  = "fiat";
+const char* MQTT_USER       = "user";
+const char* MQTT_PASS       = "password";
+const char* MQTT_CLIENT_ID  = "client_name";
 
 // 📊 MQTT топики (можно вынести в отдельный файл, если потребуется)
-const char* TOPIC_STARTENGINECOM     = "/user_17f8efcd/fiat/startenginecom";
-const char* TOPIC_ALARMONCOM         = "/user_17f8efcd/fiat/alarmoncom";
-const char* TOPIC_HEATENGINECOM      = "/user_17f8efcd/fiat/heatenginecom";
-const char* TOPIC_REFRESHCOM         = "/user_17f8efcd/fiat/refreshcom";
-const char* TOPIC_STARTPERIODCOM     = "/user_17f8efcd/fiat/startperiodcom";
-const char* TOPIC_STARTERPERIODCOM   = "/user_17f8efcd/fiat/starterperiodcom";
+const char* TOPIC_STARTENGINECOM     = "startenginecom";
+const char* TOPIC_ALARMONCOM         = "alarmoncom";
+const char* TOPIC_HEATENGINECOM      = "heatenginecom";
+const char* TOPIC_REFRESHCOM         = "refreshcom";
+const char* TOPIC_STARTPERIODCOM     = "startperiodcom";
+const char* TOPIC_STARTERPERIODCOM   = "starterperiodcom";
