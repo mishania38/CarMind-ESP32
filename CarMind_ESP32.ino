@@ -61,15 +61,15 @@ int countNetError = 0;                      // Количество неудач
 int totalcountNetError = 0;                 // Количество рестартов модема
 
 // Топики Publish
-const char startengine[] =     "fiat/startengine";
-const char alarmon[] =         "fiat/alarmon";
-const char batteryvolt[] =     "fiat/batteryvolt";
-const char heatengine[] =      "fiat/heatengine";
-const char cartemp[] =         "fiat/cartemp";
-const char totalerrorcount[] = "fiat/totalerrorcount";
-const char startperiod[] =     "fiat/startperiod";
-const char rpminfo[] =         "fiat/rpminfo";
-const char startTimer[] =      "fiat/starttimer";
+const char startengine[] =     "startengine";
+const char alarmon[] =         "alarmon";
+const char batteryvolt[] =     "batteryvolt";
+const char heatengine[] =      "heatengine";
+const char cartemp[] =         "cartemp";
+const char totalerrorcount[] = "totalerrorcount";
+const char startperiod[] =     "startperiod";
+const char rpminfo[] =         "rpminfo";
+const char startTimer[] =      "starttimer";
 
 // Прототипы
 void StartEngine(bool onTimer);
