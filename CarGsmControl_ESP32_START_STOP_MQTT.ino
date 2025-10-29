@@ -101,7 +101,10 @@ void setup() {
   pinMode(IGN_PIN, OUTPUT);
   pinMode(STARTER_PIN, OUTPUT);
   pinMode(ACC_PIN, OUTPUT);
+  pinMode(CAR_OP_PIN, OUTPUT);
+  pinMode(CAR_CL_PIN, OUTPUT);
   pinMode(BTN_LED_PIN, OUTPUT);
+  pinMode(HEAT_ENG_PIN, OUTPUT);
 
   attachInterrupt(START_BTN, myIsr, RISING); // Активируем прерывание по нажатию кнопки старт-стоп
 
@@ -125,7 +128,8 @@ void setup() {
   esp_task_wdt_deinit();
 }
 
-void loop() {}
+void loop() {
+}
 
 void Task1code(void *parameter) {
   for (;;) {
@@ -187,6 +191,7 @@ void MqttThread() {
 }
 
 void CheckStatus() {                    // // Сбор данных о состоянии автомобиля и отправка данных на сервер   // Ядро1
+  isEngineRunning = (analogRead(TACH_PIN) >= ENGINE_RPM_THRESHOLD);  // Проверяем, запущен ли двигатель
   mqtt.publish(startengine, isEngineRunning ? "1" : "0");
   mqtt.publish(alarmon, isAlarmEnabled ? "1" : "0");
   mqtt.publish(batteryvolt, String(refreshVoltage()).c_str());
@@ -195,7 +200,7 @@ void CheckStatus() {                    // // Сбор данных о сост�
   mqtt.publish(totalerrorcount, String(totalcountNetError).c_str());
   mqtt.publish(startperiod, String(engineRunDuration / 60000).c_str());
   mqtt.publish(rpminfo, String(analogRead(TACH_PIN)).c_str());
-  mqtt.publish(startTimer, String(engineStartCountdown).c_str());
+  mqtt.publish(startTimer, String(engineStartCountdown / 60000).c_str());
 
   isStatusCheckRequired = false;
 }
@@ -237,6 +242,7 @@ void StopEngine() {                     // Глушим двигатель
   digitalWrite(IGN_PIN, LOW);
   digitalWrite(ACC_PIN, LOW);
   digitalWrite(BTN_LED_PIN, LOW);
+  engineStartCountdown = 0;
 }
 
 float refreshVoltage() {                // Замер напряжения на входе через делитель напряжения
@@ -256,9 +262,12 @@ float refreshTemperature() {            // Замер температуры в 
 }
 
 void StartStopThread() {                // Обработчик нажатий кнопки старт-стоп, таймер прогрева двигателя,
-  isEngineRunning = (analogRead(TACH_PIN) >= ENGINE_RPM_THRESHOLD);  // Проверяем, запущен ли двигатель
-
+  
+  // Обработчик нажатий кнопки старт-стоп
   if (isStartButtonPressed) {     // Проверяем флаг кнопки старт-стоп
+    isEngineRunning = (analogRead(TACH_PIN) >= ENGINE_RPM_THRESHOLD);  // Проверяем, запущен ли двигатель
+
+
     if (!isEngineRunning) {       // Если двигатель не запущен
       StartEngine(false);         // То запускаем его
     } else {     // Если двигатель был запущен и нажали кнопку старт-стоп
@@ -267,6 +276,28 @@ void StartStopThread() {                // Обработчик нажатий �
     }
     isStartButtonPressed = false; // Сброс флага после обработки
   }
+
+  // Таймер прогрева двигателя при удаленном запуске
+  if (isRemoteEngineStarted) {
+    isEngineRunning = (analogRead(TACH_PIN) >= ENGINE_RPM_THRESHOLD);  // Проверяем, запущен ли двигатель
+    engineStartCountdown = (engineRunDuration - (millis() - remoteEngineStartTime)) ; // Обновляем таймер обратного отсчета
+
+    if (millis() - remoteEngineStartTime <= engineRunDuration) {  // Проверяем не вышло ли время на продолжительность дистанционного запуска
+      if (millis() - lastMqttUpdate >= 30000) {
+        isStatusCheckRequired = true;   // Ставим флаг на обновление параметрии
+        lastMqttUpdate = millis();      // Сбрасываем счетчик обновления параметрии
+      }
+    } else {          // Если время продолжительности вышло, 
+      StopEngine();   // тогда глушим двигатель и сбрасываем флаги
+      lastMqttUpdate = 0;
+      remoteEngineStartTime = 0;
+      engineStartCountdown = 0;
+      isRemoteEngineStarted = false;
+      isStatusCheckRequired = true;   // Ставим флаг на обновление параметрии
+    }
+    
+  }
+
 }
 
 void ShedulerAction() {                 // Обработчик команд с сервера MQTT

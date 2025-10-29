@@ -18,12 +18,12 @@ bool MQTTManager::connect() {
 }
 
 void MQTTManager::subscribeTopics() {
-  mqtt.subscribe("/user_17f8efcd/fiat/startenginecom");
-  mqtt.subscribe("/user_17f8efcd/fiat/alarmoncom");
-  mqtt.subscribe("/user_17f8efcd/fiat/heatenginecom");
-  mqtt.subscribe("/user_17f8efcd/fiat/refreshcom");
-  mqtt.subscribe("/user_17f8efcd/fiat/startperiodcom");
-  mqtt.subscribe("/user_17f8efcd/fiat/starterperiodcom");
+  mqtt.subscribe("fiat/startenginecom");
+  mqtt.subscribe("fiat/alarmoncom");
+  mqtt.subscribe("fiat/heatenginecom");
+  mqtt.subscribe("fiat/refreshcom");
+  mqtt.subscribe("fiat/startperiodcom");
+  mqtt.subscribe("fiat/starterperiodcom");
 }
 
 void MQTTManager::setCallback(MQTT_CALLBACK_SIGNATURE) {

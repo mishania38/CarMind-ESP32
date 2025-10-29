@@ -14,6 +14,7 @@ void WiFiManager::begin() {
   Serial.println("Connecting to WiFi...");
   if (wifiMulti.run() == WL_CONNECTED) {
     Serial.println("WiFi connected");
+    Serial.println("Подключено к: " + WiFi.SSID());
     Serial.println("IP address: ");
     Serial.println(WiFi.localIP());
   }
