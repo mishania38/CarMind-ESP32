@@ -38,6 +38,7 @@ OneWire ds18b20(15);
 
 TaskHandle_t Task1;
 TaskHandle_t Task2;
+//TaskHandle_t TaskWiFiMonitor;
 
 /*------------------------------Переменные хранения статуса-----------------------------*/
 bool isAlarmEnabled = false;                  // Флаг замков дверей. Закрыт ли автомобиль
@@ -88,8 +89,7 @@ void Task2code(void *parameter);
 IRAM_ATTR void myIsr();
 void MqttCallback(char* topic, byte* payload, unsigned int len);
 
-extern const uint8_t certs_start[] asm("_binary_certs_ar_start");
-extern const uint8_t certs_end[]   asm("_binary_certs_ar_end");
+
 
 void setup() {
   SerialMon.begin(115200);
@@ -112,9 +112,6 @@ void setup() {
 
   secureClient.setInsecure();
   
-
-
-
   // Настройки подключения к сети и MQTT брокеру
   wifi.begin();
   mqtt.begin(MQTT_BROKER, MQTT_PORT, MQTT_USER, MQTT_PASS, MQTT_CLIENT_ID);
@@ -124,6 +121,7 @@ void setup() {
   delay(500);
   xTaskCreatePinnedToCore(Task2code, "Task2", 20000, NULL, 1, &Task2, 1);
   delay(500);
+  
 
   esp_task_wdt_deinit();
 }
@@ -131,14 +129,14 @@ void setup() {
 void loop() {
 }
 
-void Task1code(void *parameter) {
+void Task1code(void *parameter) {   // Ядро 1 работа с wifi и подключение к mqtt серверу
   for (;;) {
     MqttThread();
-    vTaskDelay(pdMS_TO_TICKS(1000));
+    vTaskDelay(pdMS_TO_TICKS(500));
   }
 }
 
-void Task2code(void *parameter) {
+void Task2code(void *parameter) {   // Ядро 2 Обработка и выполнение команд с сервера, обновление параметров, обработчик кнопки старт-стоп
   for (;;) {
     StartStopThread();
     vTaskDelay(pdMS_TO_TICKS(500));
@@ -367,4 +365,18 @@ void AllPinOff() {
 
 IRAM_ATTR void myIsr() {
   isStartButtonPressed = true;
+}
+
+void WiFiMonitorThread() {
+
+  for (;;) {
+    if (WiFi.status() != WL_CONNECTED) {
+      SerialMon.println("📡 Потеря Wi-Fi. Переподключение...");
+      wifi.checkConnection();
+    } else {
+      SerialMon.println("📶 Wi-Fi стабилен: " + WiFi.SSID());
+    }
+
+    vTaskDelay(pdMS_TO_TICKS(5000));  // Проверка каждые 5 секунд
+  }
 }

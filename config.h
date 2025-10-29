@@ -15,10 +15,10 @@ const char* WIFI_PASSWORDS[] = {
 
 // 🌐 MQTT настройки
 const char* MQTT_BROKER     = "57cda94e4ac14f5ea9404f6eb28e83fb.s1.eu.hivemq.cloud";
-const int   MQTT_PORT       = 8883;  // Порт без SSL (если нужен TLS — используйте WiFiClientSecure)
+const int   MQTT_PORT       = 8883;
 
 const char* MQTT_USER       = "user_car";
-const char* MQTT_PASS       = "yIpIQHBWdSN_v1";
+const char* MQTT_PASS       = "015C356c";
 const char* MQTT_CLIENT_ID  = "fiat";
 
 // 📊 MQTT топики (можно вынести в отдельный файл, если потребуется)
