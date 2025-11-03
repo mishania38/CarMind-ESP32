@@ -1,0 +1,26 @@
+# Object files
+*.o
+*.elf
+
+# Static libraries
+*.a
+*.lib
+
+# Dynamic libraries
+*.so
+*.dll
+
+# Firmware
+*.hex
+
+# Kernel files
+*.ko
+
+# Module files
+*.mod.c
+*.mod
+
+# Other files
+*.cmd
+*.symvers
+*.order
