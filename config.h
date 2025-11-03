@@ -1,4 +1,5 @@
 #pragma once
+#include "bsp/ESP32.h"
 
 // 🛜 Wi-Fi настройки
 const char* WIFI_SSIDS[] = {

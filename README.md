@@ -1,11 +1,11 @@
-# 🚗 CarMind ESP32 — Remote Vehicle Control via MQTT
+# 🚗 CarMind — Remote Vehicle Control via MQTT
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Platform: ESP32](https://img.shields.io/badge/Platform-ESP32-green.svg)](https://www.espressif.com/en/products/socs/esp32)
 [![MQTT Enabled](https://img.shields.io/badge/MQTT-Secure%20TLS-orange.svg)](https://mqtt.org/)
 [![Build: Manual](https://img.shields.io/badge/Build-Manual-lightgrey.svg)]()
 
-**CarMind ESP32** is a firmware for the ESP32 microcontroller that enables secure remote control of vehicle systems using MQTT. It supports engine start/stop, door locking/unlocking, engine heating, and real-time telemetry. Designed for reliability, modularity, and secure communication, it integrates FreeRTOS multitasking and watchdog protection.
+**CarMind** is a firmware for the supported microcontrollers that enables secure remote control of vehicle systems using MQTT. It supports engine start/stop, door locking/unlocking, engine heating, and real-time telemetry. Designed for reliability, modularity, and secure communication, it integrates FreeRTOS multitasking and watchdog protection.
 
 ---
 
@@ -41,7 +41,7 @@
 
 ## ⚙️ Hardware Requirements
 
-- ESP32 DevKit v1
+- Supported Boards
 - ULN2003 relay module
 - DS18B20 temperature sensor
 - Start/Stop button (digital input)
@@ -49,12 +49,20 @@
 
 ---
 
+## 💡 Supported Boards
+
+- ESP32 DevKit V1
+
+---
+
 ## 📂 Project Structure
 CarMind
-- CarMind_ESP32.ino # Core logic and task scheduling
+- CarMind.ino      # Setup and task scheduling
+- CarMind.cpp      # Core logic
+- bsp              # Board specifics
 - mqtt_manager.cpp # MQTT client setup and communication
-- config.h # Broker credentials and constants
-- certs_ar.h # Embedded TLS certificates (binary format)
+- config.h         # Board selection, broker credentials and constants
+- certs_ar.h       # Embedded TLS certificates (binary format)
 - wifi_manager.cpp # Wi-Fi connection and failover
 
 
@@ -62,9 +70,9 @@ CarMind
 
 ## 🚀 Getting Started
 
-1. Flash the firmware to your ESP32 using Arduino IDE or PlatformIO
+1. Flash the firmware to your board using Arduino IDE or PlatformIO
 2. Configure your MQTT broker credentials in `config.h`
-3. Connect the ESP32 to your vehicle’s control circuits
+3. Connect the board to your vehicle’s control circuits
 4. Monitor and control the system via MQTT dashboard or client
 
 ---
